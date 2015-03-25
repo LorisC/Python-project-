@@ -1,0 +1,34 @@
+import os
+from PIL import Image, ImageEnhance
+from PIL.ImageChops import difference
+#this function will compress the file and find the difference between the images in order
+#to get the error level analysis (ELA)
+def compressLoop(infile):
+    n=1
+    baseName, e = os.path.splitext(infile)
+    f, e = os.path.splitext(infile)
+    new_file = (baseName + str(n))
+    outfile = new_file + ".jpg"
+    #open previously generated file
+    compress_image = Image.open(infile)
+    #compress file at 95% of previous quality like mentioned in article
+    compress_image.save(outfile, "JPEG", quality=95) 
+	#opens the image and the compressed image
+    test1 = Image.open(infile)
+    test = Image.open(outfile)
+	#finds the difference between the images
+    ela_image = difference(test1, test)
+    extrema = ela_image.getextrema()
+    max_diff = max([ex[1] for ex in extrema])
+    scale = 255.0/max_diff
+    ela_image = ImageEnhance.Brightness(ela_image).enhance(scale)
+    #saves the image with the enhanced brightness and the difference between both images
+	#showing the final result of the image.
+    ela_image.save("ela.jpg")
+    return max_diff
+    
+def main():
+    #Taking user input
+    infile = str(input("Filename to compress: "))
+    compressLoop(infile)
+main()
