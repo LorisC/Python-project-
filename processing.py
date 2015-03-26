@@ -1,6 +1,8 @@
 import requests
 import StringIO
 import uuid
+from threading import Thread
+from Queue import Queue
 
 from PIL import Image
 
@@ -39,22 +41,46 @@ def parse_images(facebook_response):
 
 
 # fetchImages fetches the profile images and scores them through an ELA
-def fetch_images(users):
+def fetch_images(concurrency_factor, users):
+    # Threading for parallel downloads
+    q = Queue(concurrency_factor * 2)
+    for u in range(concurrency_factor):
+        t = Thread(target=fetch_images_worker(q))
+        t.daemon = True
+        t.start()
     for u in users:
-        # Download of the picture of the user
-        picture_download = requests.get(u.picture_url)
-        picture = Image.open(StringIO.StringIO(picture_download.content))
+        u.picture_file = uuid.uuid4().hex
+        q.put((u.picture_url, u.picture_file))
+    q.join()
+
+    # Serial processing of the ELA tasks
+    for u in users:
+        picture = Image.open("tmp/" + u.picture_file + ".jpg")
+        # Display optimization
+        (w, h) = picture.size
+        if h > 220:
+            picture = picture.crop((0, (h - 220) / 2, w, (h + 220) / 2))
+            picture.save("tmp/" + u.picture_file + ".jpg", "jpeg", quality=99)
         # ELA
         try:
             u.score, ela = imaging.apply_ela(picture)
         except:
             users.remove(u)
             continue
-        # Save all the pictures for later usage
-        u.picture_file = uuid.uuid4().hex
-        picture.save("tmp/" + u.picture_file + ".jpg")
+        # Save the pictures for later usage
         u.ela_file = uuid.uuid4().hex
         ela.save("tmp/" + u.ela_file + ".jpg")
+
+
+def fetch_images_worker(q):
+    def worker():
+        while True:
+            url, id = q.get()
+            picture_data = requests.get(url)
+            picture = Image.open(StringIO.StringIO(picture_data.content))
+            picture.save("tmp/" + id + ".jpg", "jpeg", quality=99)
+            q.task_done()
+    return worker
 
 
 # Ranks sorts the users array based on the score of each user
