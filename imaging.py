@@ -2,11 +2,12 @@ import glob
 import os
 import time
 import uuid
+
 from PIL import Image, ImageChops, ImageEnhance
 
 # applyELA applies the Error Level Analysis algorithm to an image and returns a 
 # tuple made of the difference percentage and the difference image
-def applyELA(original):
+def apply_ela(original):
     # Compress file at 75% of previous quality like mentioned in the paper
     tmpfile = "tmp/" + uuid.uuid4().hex + ".jpg"
     original.save(tmpfile, "jpeg", quality=75) 
@@ -22,7 +23,7 @@ def applyELA(original):
 
 
 # cleanImages removes images older than 15 minutes
-def cleanImages():
+def clean_images():
     files = glob.glob("tmp/*.jpg")
     for f in files:
         if os.stat(f).st_ctime < time.time() - 15*60*60:

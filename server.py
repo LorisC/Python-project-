@@ -1,8 +1,11 @@
 import os
 import facebook
-from flask import Flask, redirect, request, url_for, render_template
 
-app = Flask(__name__)
+from flask import Flask, redirect, request, url_for, render_template, send_from_directory
+
+import processing
+
+app = Flask(__name__, static_url_path="")
 client_id = '1422264258073656'
 client_secret = 'b5727881a490b80253fcecdb1748bd85'
 redirect_uri = 'https://cst-205.herokuapp.com/results'
@@ -11,6 +14,11 @@ redirect_uri = 'https://cst-205.herokuapp.com/results'
 @app.route('/')
 def home():
     return render_template('index.html')
+
+# /images is the directory where images are served from
+@app.route('/images/<path:path>')
+def send_js(path):
+    return send_from_directory('tmp', path)
 
 
 # login is the Facebook login route
@@ -28,9 +36,14 @@ def logged_in():
     if user_code == '':
         return redirect(url_for('/'))
     graph = facebook.GraphAPI()
-    response = graph.get_access_token_from_code(user_code, redirect_uri, client_id, client_secret)
-    graph = facebook.GraphAPI(access_token=response.itervalues().next(), version='2.2')
-    print(graph.get_object(id='me/taggable_friends?fields=name,picture.type(large)'))
+    token_response = graph.get_access_token_from_code(user_code, redirect_uri, client_id, client_secret)
+    graph = facebook.GraphAPI(access_token=token_response.itervalues().next(), version='2.2')
+    response = graph.get_object(id='me/taggable_friends?fields=name,picture.type(large)')
+    users = processing.parse_images(response)
+    processing.fetch_images(users)
+    processing.rank(users)
+    for u in users:
+        print u.name, u.score
     return "ok"
 
 
