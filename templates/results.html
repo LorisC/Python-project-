@@ -1,0 +1,55 @@
+<html>
+<head>
+<script type="text/javascript" src="//cdnjs.cloudflare.com/ajax/libs/jquery/2.1.3/jquery.min.js"></script>
+	<link rel="stylesheet" type="text/css" href="https://cdnjs.cloudflare.com/ajax/libs/semantic-ui/1.11.4/semantic.min.css">
+	<style type="text/css">
+	body {
+		text-align: center;
+		margin-left: 1%;
+		width: 98%;
+	}
+	.pointer {
+		cursor: pointer;
+	}
+	</style>
+</head>
+<body>
+	<h1>Results</h1>
+	<div class="ui six doubling cards">
+		{% for u in users %}
+		<div class="card">
+			<div class="image">
+				<img src="/images/{{ u.picture_file }}.jpg" alt="{{ u.name }}" id="{{ u.picture_file }}" />
+				<img src="/images/{{ u.ela_file }}.jpg" alt="{{ u.name }}" style="display: none" id="{{ u.ela_file }}" />
+			</div>
+			<div class="content">
+				<a class="header">{{ u.name }}</a>
+			</div>
+			<div class="extra content">
+				<span class="right floated pointer">
+					<u data-original="{{ u.picture_file }}" data-ela="{{ u.ela_file }}">Compare</u>
+				</span>
+				<span class="left floated">
+					<i class="wizard icon"></i>
+					Score: {{ u.score }}
+				</span>
+			</div>
+		</div>
+		{% endfor %}
+	</div>
+	<script>
+	$(function() {
+		$('[data-ela]').mouseenter(function() {
+			$('#' + $(this).attr('data-original')).hide();
+			$('#' + $(this).attr('data-ela')).show();
+		});
+
+		$('[data-original]').mouseleave(function() {
+			$('#' + $(this).attr('data-ela')).hide();
+			$('#' + $(this).attr('data-original')).show();
+		});
+	});
+	</script>
+</body>
+</html>
+
