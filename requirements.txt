@@ -1,4 +1,4 @@
 Flask==0.10.1
-facebook-python-sdk==0.1
+facebook-sdk==1.0.0a0
 Pillow==2.1.0
 
