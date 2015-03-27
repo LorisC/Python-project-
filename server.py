@@ -35,8 +35,11 @@ def logged_in():
     user_code = request.args.get("code")
     if user_code == "":
         return redirect(url_for("/"))
-    response = fbapi.get_facebook_response(client_id, client_secret,
-        redirect_uri, user_code)
+    try:
+        response = fbapi.get_facebook_response(client_id, client_secret,
+            redirect_uri, user_code)
+    except:
+        return redirect(url_for('login'), code=302)
     users = processing.parse_images(response)
     processing.fetch_images(concurrency_factor, users)
     processing.rank(users)
