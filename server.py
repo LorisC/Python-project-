@@ -7,7 +7,7 @@ import fbapi
 import processing
 
 app = Flask(__name__, static_url_path="")
-concurrency_factor = 150
+concurrency_factor = 30
 client_id = "1422264258073656"
 client_secret = "b5727881a490b80253fcecdb1748bd85"
 redirect_uri = "https://cst-205.herokuapp.com/results"
