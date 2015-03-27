@@ -44,14 +44,16 @@ def parse_images(facebook_response):
 def fetch_images(concurrency_factor, users):
     # Threading for parallel downloads
     q = Queue(concurrency_factor * 2)
+    stop = [False]
     for u in range(concurrency_factor):
-        t = Thread(target=fetch_images_worker(q))
+        t = Thread(target=fetch_images_worker(q, stop))
         t.daemon = True
         t.start()
     for u in users:
         u.picture_file = uuid.uuid4().hex
         q.put((u.picture_url, u.picture_file))
     q.join()
+    stop[0] = True
 
     # Serial processing of the ELA tasks
     for u in users:
@@ -72,9 +74,11 @@ def fetch_images(concurrency_factor, users):
         ela.save("tmp/" + u.ela_file + ".jpg")
 
 
-def fetch_images_worker(q):
+def fetch_images_worker(q, stop):
+    # stop is an array whose first element is a boolean that indicated whether
+    # or not the worker should stop
     def worker():
-        while True:
+        while not stop[0]:
             url, id = q.get()
             picture_data = requests.get(url)
             picture = Image.open(StringIO.StringIO(picture_data.content))
